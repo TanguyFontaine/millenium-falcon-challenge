@@ -1,0 +1,10 @@
+# solution files
+/engine/PathfinderEngine.sln
+/engine/src/PathfinderEngine.csproj
+/engine/tests/PathfinderTests.csproj
+
+# build output
+/engine/src/bin
+/engine/src/obj
+/engine/tests/bin
+/engine/tests/obj
