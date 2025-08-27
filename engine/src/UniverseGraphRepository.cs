@@ -4,12 +4,12 @@ using System.Collections.Generic;
 // A Node in the graph representing the universe.
 public class Planet
 {
-    public string Value { get; set; }
+    public string Name { get; set; }
     public Dictionary<Planet, int> Neighbors { get; set; } = new Dictionary<Planet, int>();
 
-    public Planet(string value)
+    public Planet(string name)
     {
-        Value = value;
+        Name = name;
     }
 
     public void AddNeighbor(Planet node, int distance)
@@ -29,7 +29,7 @@ public class UniverseGraphRepository
 
     public Planet? FindPlanet(string name)
     {
-        return m_planets.Find(p => p.Value == name);
+        return m_planets.Find(p => p.Name == name);
     }
 
     public IEnumerable<Planet> GetAllPlanets()

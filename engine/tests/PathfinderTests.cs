@@ -1,6 +1,8 @@
 using System.Collections.Generic;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
+using BountyHuntersMap = System.Collections.Generic.Dictionary<string, System.Collections.Generic.List<int>>;
+
 [TestClass]
 public class PathfinderTests
 {
@@ -44,14 +46,14 @@ public class PathfinderTests
         var hoth = new Planet("Hoth");
 
         // Create connections between planets
-        tatooine.AddNeighbor(dagobah, 4);
-        tatooine.AddNeighbor(hoth, 5);
-        dagobah.AddNeighbor(endor, 5);
+        tatooine.AddNeighbor(dagobah, 9);
+        tatooine.AddNeighbor(hoth, 4);
+        dagobah.AddNeighbor(endor, 2);
         dagobah.AddNeighbor(hoth, 3);
-        hoth.AddNeighbor(endor, 2);
-        endor.AddNeighbor(dagobah, 5);
+        hoth.AddNeighbor(endor, 8);
+        endor.AddNeighbor(dagobah, 2);
         hoth.AddNeighbor(dagobah, 3);
-        endor.AddNeighbor(hoth, 2);
+        endor.AddNeighbor(hoth, 8);
 
         // Add planets to repository
         repository.AddPlanet(tatooine);
@@ -63,110 +65,201 @@ public class PathfinderTests
     }
 
     [TestMethod]
-    public void FindShortestPath_NonExistentPlanet_ReturnsMinusOne()
+    public void FindShortestPath_NonExistentPlanet_ReturnsMinusOneDayAndZeroPercentSuccess()
     {
         var repository = CreateTestRepository();
-        var pathfinder = new Pathfinder(repository, 6);
+        var bountyHuntersDaysPresence = new BountyHuntersMap();
+        var pathfinder = new Pathfinder(repository, bountyHuntersDaysPresence, 6);
 
-        int resultStartNonExistent = pathfinder.FindShortestPath("NonExistent", "Endor", 10);
-        int resultArrivalNonExistent = pathfinder.FindShortestPath("Tatooine", "NonExistent", 10);
+        PathData resultStartNonExistent = pathfinder.FindShortestPath("NonExistent", "Endor", 10);
+        PathData resultArrivalNonExistent = pathfinder.FindShortestPath("Tatooine", "NonExistent", 10);
 
-        Assert.AreEqual(-1, resultStartNonExistent);
-        Assert.AreEqual(-1, resultArrivalNonExistent);
+        Assert.AreEqual(-1, resultStartNonExistent.m_numberOfDays);
+        Assert.AreEqual(-1, resultArrivalNonExistent.m_numberOfDays);
+        Assert.AreEqual(0, resultStartNonExistent.m_successProbability);
+        Assert.AreEqual(0, resultArrivalNonExistent.m_successProbability);
+
     }
 
     [TestMethod]
-    public void FindShortestPath_SamePlanet_ReturnsZero()
+    public void FindShortestPath_SamePlanet_ReturnsZeroDaysAndHundredPercentSuccess()
     {
         var repository = CreateTestRepository();
-        var pathfinder = new Pathfinder(repository, 6);
+        var bountyHuntersDaysPresence = new BountyHuntersMap();
+        var pathfinder = new Pathfinder(repository, bountyHuntersDaysPresence, 6);
 
-        int result = pathfinder.FindShortestPath("Tatooine", "Tatooine", 10);
+        PathData result = pathfinder.FindShortestPath("Tatooine", "Tatooine", 10);
 
-        Assert.AreEqual(0, result);
+        Assert.AreEqual(0, result.m_numberOfDays);
+        Assert.AreEqual(100, result.m_successProbability);
     }
 
     [TestMethod]
-    public void FindShortestPath_ValidPlanetsAndCountdownBigEnough_ReturnsShortestDistance()
+    public void FindShortestPath_ValidPlanetsAndCountdownBigEnough_NoBH_ReturnsShortestDistanceWithHundredPercent()
     {
         var repository = CreateTestRepository();
-        var pathfinder = new Pathfinder(repository, 6);
+        var bountyHuntersDaysPresence = new BountyHuntersMap();
+        var pathfinder = new Pathfinder(repository, bountyHuntersDaysPresence, 6);
 
-        int result = pathfinder.FindShortestPath("Tatooine", "Endor", 10);
+        PathData result = pathfinder.FindShortestPath("Tatooine", "Endor", 10);
 
         // Tatooine -> Hoth (6 + 1) -> Endor (1) = 8 days with refueling
-        Assert.AreEqual(8, result);
+        Assert.AreEqual(8, result.m_numberOfDays);
+        Assert.AreEqual(100, result.m_successProbability);
     }
 
     [TestMethod]
-    public void FindShortestPath_ValidPlanetsOnOtherRepository_ReturnsShortestDistance()
+    public void FindShortestPath_ValidPlanetsOnOtherRepository_NoBH_ReturnsShortestDistanceWithHundredPercent()
     {
         var repository = CreateTestRepository2();
-        var pathfinder = new Pathfinder(repository, 6);
+        var bountyHuntersDaysPresence = new BountyHuntersMap();
+        var pathfinder = new Pathfinder(repository, bountyHuntersDaysPresence, 6);
 
-        int result = pathfinder.FindShortestPath("Tatooine", "Endor", 10);
+        PathData result = pathfinder.FindShortestPath("Tatooine", "Endor", 10);
 
-        // Tatooine -> Hoth (5 + 1) -> Endor (2) = 8 days with refueling
-        Assert.AreEqual(8, result);
+        // Tatooine -> Hoth (4) -> Dagobah (3 + 1) -> Endor (2) = 10 days with refueling
+        Assert.AreEqual(10, result.m_numberOfDays);
+        Assert.AreEqual(100, result.m_successProbability);
     }
 
     [TestMethod]
-    public void FindShortestPath_RefuelingMakesCountdownToShort_ReturnsMinusOne()
+    public void FindShortestPath_RefuelingMakesCountdownToShort_ReturnsMinusOneWithZeroPercent()
     {
         var repository = CreateTestRepository();
-        var pathfinder = new Pathfinder(repository, 6);
+        var bountyHuntersDaysPresence = new BountyHuntersMap();
+        var pathfinder = new Pathfinder(repository, bountyHuntersDaysPresence, 6);
 
-        int result = pathfinder.FindShortestPath("Tatooine", "Endor", 7);
+        PathData result = pathfinder.FindShortestPath("Tatooine", "Endor", 7);
 
         // Tatooine -> Hoth (6 + 1) -> Endor (1) = 8 days with refueling
-        Assert.AreEqual(-1, result);
+        Assert.AreEqual(-1, result.m_numberOfDays);
+        Assert.AreEqual(0, result.m_successProbability);
+
     }
 
     [TestMethod]
-    public void FindShortestPath_ArrivingSameDayAsCountdown_ReturnsShortestDistance()
+    public void FindShortestPath_ArrivingSameDayAsCountdown_NoBH_ReturnsShortestDistanceWithHundredPercent()
     {
         var repository = CreateTestRepository();
-        var pathfinder = new Pathfinder(repository, 6);
+        var bountyHuntersDaysPresence = new BountyHuntersMap();
+        var pathfinder = new Pathfinder(repository, bountyHuntersDaysPresence, 6);
 
-        int result = pathfinder.FindShortestPath("Tatooine", "Endor", 8);
+        PathData result = pathfinder.FindShortestPath("Tatooine", "Endor", 8);
 
         // Tatooine -> Hoth (6 + 1) -> Endor (1) = 8 days with refueling
-        Assert.AreEqual(8, result);
+        Assert.AreEqual(8, result.m_numberOfDays);
+        Assert.AreEqual(100, result.m_successProbability);
     }
 
     [TestMethod]
-    public void FindShortestPath_CountdownNotBigEnough_ReturnsMinusOne()
+    public void FindShortestPath_CountdownNotBigEnough_ReturnsMinusOneWithZeroPercent()
     {
         var repository = CreateTestRepository();
-        var pathfinder = new Pathfinder(repository, 6);
+        var bountyHuntersDaysPresence = new BountyHuntersMap();
+        var pathfinder = new Pathfinder(repository, bountyHuntersDaysPresence, 6);
 
-        int result = pathfinder.FindShortestPath("Tatooine", "Endor", 5);
+        PathData result = pathfinder.FindShortestPath("Tatooine", "Endor", 5);
 
         // Tatooine -> Hoth (6 + 1) -> Endor (1) = 8 days with refueling
-        Assert.AreEqual(-1, result);
+        Assert.AreEqual(-1, result.m_numberOfDays);
+        Assert.AreEqual(0, result.m_successProbability);
+
     }
 
     [TestMethod]
-    public void FindShortestPath_TwoOtherValidPlanets_ReturnsShortestDistance()
+    public void FindShortestPath_TwoOtherValidPlanets_NoBH_ReturnsShortestDistanceWithHundredPercent()
     {
         var repository = CreateTestRepository();
-        var pathfinder = new Pathfinder(repository, 6);
+        var bountyHuntersDaysPresence = new BountyHuntersMap();
+        var pathfinder = new Pathfinder(repository, bountyHuntersDaysPresence, 6);
 
-        int result = pathfinder.FindShortestPath("Dagobah", "Hoth", 3);
+        PathData result = pathfinder.FindShortestPath("Dagobah", "Hoth", 3);
 
         // Dagobah -> Hoth (1) = 1 day
-        Assert.AreEqual(1, result);
+        Assert.AreEqual(1, result.m_numberOfDays);
+        Assert.AreEqual(100, result.m_successProbability);
+    }
+
+    [TestMethod]
+    public void FindShortestPath_FuelCapacityTooSmall_NoBH_ReturnsMinusOneWithHundredPercent()
+    {
+        var repository = CreateTestRepository();
+        var bountyHuntersDaysPresence = new BountyHuntersMap();
+        var pathfinder = new Pathfinder(repository, bountyHuntersDaysPresence, 3);
+
+        PathData result = pathfinder.FindShortestPath("Tatooine", "Endor", 15);
+
+        // Both Tatooine neighbors require more fuel than available
+        Assert.AreEqual(-1, result.m_numberOfDays);
+        Assert.AreEqual(0, result.m_successProbability);
+    }
+
+    [TestMethod]
+    public void FindShortestPath_ValidPlanetsAndCountdownBigEnough_WithOneBHEncounter_ReturnsShortestDistanceWithProbability()
+    {
+        var repository = CreateTestRepository();
+        var bountyHuntersDaysPresence = new BountyHuntersMap
+        {
+            { "Hoth", new List<int> { 6 } }
+        };
+        var pathfinder = new Pathfinder(repository, bountyHuntersDaysPresence, 6);
+
+        PathData result = pathfinder.FindShortestPath("Tatooine", "Endor", 10);
+
+        // Tatooine -> Hoth (6 + 1) -> Endor (1) = 8 days with refueling
+        Assert.AreEqual(8, result.m_numberOfDays);
+        Assert.AreEqual(90, result.m_successProbability);
+    }
+
+    [TestMethod]
+    public void FindShortestPath_ValidPlanetsAndCountdownBigEnough_WithBHNotCrossed_ReturnsShortestDistanceWithHundredPercent()
+    {
+        var repository = CreateTestRepository();
+        var bountyHuntersDaysPresence = new BountyHuntersMap
+        {
+            { "Hoth", new List<int> { 1, 2, 3, 9, 10 } }
+        };
+        var pathfinder = new Pathfinder(repository, bountyHuntersDaysPresence, 6);
+
+        PathData result = pathfinder.FindShortestPath("Tatooine", "Endor", 10);
+
+        // Tatooine -> Hoth (6 + 1) -> Endor (1) = 8 days with refueling
+        Assert.AreEqual(8, result.m_numberOfDays);
+        Assert.AreEqual(100, result.m_successProbability);
+    }
+
+    [TestMethod]
+    public void FindShortestPath_ValidPlanetsAndCountdownBigEnough_WithSeveralBH_ReturnsShortestDistanceWithProbability()
+    {
+        var repository = CreateTestRepository2();
+        var bountyHuntersDaysPresence = new BountyHuntersMap
+        {
+            { "Hoth", new List<int> { 3, 4 } },
+            { "Dagobah", new List<int> { 6, 7 } }
+        };
+        var pathfinder = new Pathfinder(repository, bountyHuntersDaysPresence, 12);
+
+        PathData result = pathfinder.FindShortestPath("Tatooine", "Endor", 15);
+
+        // Tatooine -> Hoth (4) -> Dagobah (3) -> Endor (2) = 9 days with refueling
+        Assert.AreEqual(9, result.m_numberOfDays);
+        Assert.AreEqual(81, result.m_successProbability);
     }
     
         [TestMethod]
-    public void FindShortestPath_FuelCapacityTooSmall_ReturnsMinusOne()
+    public void FindShortestPath_RefuelingOnPlanetWithBountyHunters_ReturnsShortestDistanceWithProbability()
     {
         var repository = CreateTestRepository();
-        var pathfinder = new Pathfinder(repository, 3);
+        var bountyHuntersDaysPresence = new BountyHuntersMap
+        {
+            { "Hoth", new List<int> { 6, 7, 8 } }
+        };
+        var pathfinder = new Pathfinder(repository, bountyHuntersDaysPresence, 6);
 
-        int result = pathfinder.FindShortestPath("Tatooine", "Endor", 15);
+        PathData result = pathfinder.FindShortestPath("Tatooine", "Endor", 10);
 
-        // Both Tatooine neighbors require more fuel than available
-        Assert.AreEqual(-1, result);
+        // Tatooine -> Hoth (6 + 1) -> Endor (1) = 8 days with refueling
+        Assert.AreEqual(8, result.m_numberOfDays);
+        Assert.AreEqual(81, result.m_successProbability);
     }
 }
