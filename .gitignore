@@ -1,3 +1,5 @@
+#ENGINE FILES
+
 # solution files
 /engine/PathfinderEngine.sln
 /engine/src/PathfinderEngine.csproj
@@ -8,4 +10,9 @@
 /engine/src/obj
 /engine/tests/bin
 /engine/tests/obj
-.fake
+
+#FRONTEND FILES
+/c3po/.editorconfig
+/c3po/.angular
+/c3po/.vscode
+/c3po/node_modules
