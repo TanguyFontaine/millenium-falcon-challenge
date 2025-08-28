@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-using BountyHuntersMap = System.Collections.Generic.Dictionary<string, System.Collections.Generic.List<int>>;
+using BountyHuntersMap = System.Collections.Generic.Dictionary<string, System.Collections.Generic.SortedSet<int>>;
 
 [TestClass]
 public class PathfinderTests
@@ -69,7 +69,7 @@ public class PathfinderTests
     {
         var repository = CreateTestRepository();
         var bountyHuntersDaysPresence = new BountyHuntersMap();
-        var pathfinder = new Pathfinder(repository, bountyHuntersDaysPresence, 6);
+        var pathfinder = new Pathfinder(ref repository, ref bountyHuntersDaysPresence, 6);
 
         PathData resultStartNonExistent = pathfinder.FindShortestPath("NonExistent", "Endor", 10);
         PathData resultArrivalNonExistent = pathfinder.FindShortestPath("Tatooine", "NonExistent", 10);
@@ -86,7 +86,7 @@ public class PathfinderTests
     {
         var repository = CreateTestRepository();
         var bountyHuntersDaysPresence = new BountyHuntersMap();
-        var pathfinder = new Pathfinder(repository, bountyHuntersDaysPresence, 6);
+        var pathfinder = new Pathfinder(ref repository, ref bountyHuntersDaysPresence, 6);
 
         PathData result = pathfinder.FindShortestPath("Tatooine", "Tatooine", 10);
 
@@ -99,7 +99,7 @@ public class PathfinderTests
     {
         var repository = CreateTestRepository();
         var bountyHuntersDaysPresence = new BountyHuntersMap();
-        var pathfinder = new Pathfinder(repository, bountyHuntersDaysPresence, 6);
+        var pathfinder = new Pathfinder(ref repository, ref bountyHuntersDaysPresence, 6);
 
         PathData result = pathfinder.FindShortestPath("Tatooine", "Endor", 10);
 
@@ -113,7 +113,7 @@ public class PathfinderTests
     {
         var repository = CreateTestRepository2();
         var bountyHuntersDaysPresence = new BountyHuntersMap();
-        var pathfinder = new Pathfinder(repository, bountyHuntersDaysPresence, 6);
+        var pathfinder = new Pathfinder(ref repository, ref bountyHuntersDaysPresence, 6);
 
         PathData result = pathfinder.FindShortestPath("Tatooine", "Endor", 10);
 
@@ -127,7 +127,7 @@ public class PathfinderTests
     {
         var repository = CreateTestRepository();
         var bountyHuntersDaysPresence = new BountyHuntersMap();
-        var pathfinder = new Pathfinder(repository, bountyHuntersDaysPresence, 6);
+        var pathfinder = new Pathfinder(ref repository, ref bountyHuntersDaysPresence, 6);
 
         PathData result = pathfinder.FindShortestPath("Tatooine", "Endor", 7);
 
@@ -142,7 +142,7 @@ public class PathfinderTests
     {
         var repository = CreateTestRepository();
         var bountyHuntersDaysPresence = new BountyHuntersMap();
-        var pathfinder = new Pathfinder(repository, bountyHuntersDaysPresence, 6);
+        var pathfinder = new Pathfinder(ref repository, ref bountyHuntersDaysPresence, 6);
 
         PathData result = pathfinder.FindShortestPath("Tatooine", "Endor", 8);
 
@@ -156,7 +156,7 @@ public class PathfinderTests
     {
         var repository = CreateTestRepository();
         var bountyHuntersDaysPresence = new BountyHuntersMap();
-        var pathfinder = new Pathfinder(repository, bountyHuntersDaysPresence, 6);
+        var pathfinder = new Pathfinder(ref repository, ref bountyHuntersDaysPresence, 6);
 
         PathData result = pathfinder.FindShortestPath("Tatooine", "Endor", 5);
 
@@ -171,7 +171,7 @@ public class PathfinderTests
     {
         var repository = CreateTestRepository();
         var bountyHuntersDaysPresence = new BountyHuntersMap();
-        var pathfinder = new Pathfinder(repository, bountyHuntersDaysPresence, 6);
+        var pathfinder = new Pathfinder(ref repository, ref bountyHuntersDaysPresence, 6);
 
         PathData result = pathfinder.FindShortestPath("Dagobah", "Hoth", 3);
 
@@ -185,7 +185,7 @@ public class PathfinderTests
     {
         var repository = CreateTestRepository();
         var bountyHuntersDaysPresence = new BountyHuntersMap();
-        var pathfinder = new Pathfinder(repository, bountyHuntersDaysPresence, 3);
+        var pathfinder = new Pathfinder(ref repository, ref bountyHuntersDaysPresence, 3);
 
         PathData result = pathfinder.FindShortestPath("Tatooine", "Endor", 15);
 
@@ -200,9 +200,9 @@ public class PathfinderTests
         var repository = CreateTestRepository();
         var bountyHuntersDaysPresence = new BountyHuntersMap
         {
-            { "Hoth", new List<int> { 6 } }
+            { "Hoth", new SortedSet<int> { 6 } }
         };
-        var pathfinder = new Pathfinder(repository, bountyHuntersDaysPresence, 6);
+        var pathfinder = new Pathfinder(ref repository, ref bountyHuntersDaysPresence, 6);
 
         PathData result = pathfinder.FindShortestPath("Tatooine", "Endor", 10);
 
@@ -217,9 +217,9 @@ public class PathfinderTests
         var repository = CreateTestRepository();
         var bountyHuntersDaysPresence = new BountyHuntersMap
         {
-            { "Hoth", new List<int> { 1, 2, 3, 9, 10 } }
+            { "Hoth", new SortedSet<int> { 1, 2, 3, 9, 10 } }
         };
-        var pathfinder = new Pathfinder(repository, bountyHuntersDaysPresence, 6);
+        var pathfinder = new Pathfinder(ref repository, ref bountyHuntersDaysPresence, 6);
 
         PathData result = pathfinder.FindShortestPath("Tatooine", "Endor", 10);
 
@@ -234,10 +234,10 @@ public class PathfinderTests
         var repository = CreateTestRepository2();
         var bountyHuntersDaysPresence = new BountyHuntersMap
         {
-            { "Hoth", new List<int> { 3, 4 } },
-            { "Dagobah", new List<int> { 6, 7 } }
+            { "Hoth", new SortedSet<int> { 3, 4 } },
+            { "Dagobah", new SortedSet<int> { 6, 7 } }
         };
-        var pathfinder = new Pathfinder(repository, bountyHuntersDaysPresence, 12);
+        var pathfinder = new Pathfinder(ref repository, ref bountyHuntersDaysPresence, 12);
 
         PathData result = pathfinder.FindShortestPath("Tatooine", "Endor", 15);
 
@@ -252,9 +252,9 @@ public class PathfinderTests
         var repository = CreateTestRepository();
         var bountyHuntersDaysPresence = new BountyHuntersMap
         {
-            { "Hoth", new List<int> { 6, 7, 8 } }
+            { "Hoth", new SortedSet<int> { 6, 7, 8 } }
         };
-        var pathfinder = new Pathfinder(repository, bountyHuntersDaysPresence, 6);
+        var pathfinder = new Pathfinder(ref repository, ref bountyHuntersDaysPresence, 6);
 
         PathData result = pathfinder.FindShortestPath("Tatooine", "Endor", 10);
 

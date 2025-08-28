@@ -1,7 +1,6 @@
-
 // The key String is the planet
-// The value List<int> is the list of days on which bounty hunters are on the planet.
-using BountyHuntersMap = System.Collections.Generic.Dictionary<string, System.Collections.Generic.List<int>>;
+// The value SortedSet<int> is the list of days on which bounty hunters are on the planet.
+using BountyHuntersMap = System.Collections.Generic.Dictionary<string, System.Collections.Generic.SortedSet<int>>;
 
 // For testing and debug purpose, keep track of the data returned by the Pathfinder class.
 // m_numberOfDays -> number of days it took to travel from start to arrival planet.
@@ -28,7 +27,7 @@ public class Pathfinder
     private int m_falconAutonomy { get; set; }
 
     // Constructor
-    public Pathfinder(UniverseGraphRepository universeGraphRepository, BountyHuntersMap bountyHunters, int falconAutonomy)
+    public Pathfinder(ref UniverseGraphRepository universeGraphRepository, ref BountyHuntersMap bountyHunters, int falconAutonomy)
     {
         m_universeGraphRepository = universeGraphRepository;
         m_bountyHuntersMap = bountyHunters;
