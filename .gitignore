@@ -12,7 +12,18 @@
 /engine/tests/obj
 
 #FRONTEND FILES
+
 /c3po/.editorconfig
 /c3po/.angular
 /c3po/.vscode
 /c3po/node_modules
+
+# BACKEND FILES
+
+# solution files
+/onboard_computer/OnboardComputer.sln
+/onboard_computer/src/OnboardComputer.csproj
+
+# build output
+/onboard_computer/bin
+/onboard_computer/obj
