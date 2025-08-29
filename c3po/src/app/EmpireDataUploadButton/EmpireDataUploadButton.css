@@ -1,14 +1,28 @@
 .file-upload-container {
   text-align: center;
   padding: 40px;
-  max-width: 400px;
+  max-width: 600px;
   margin: 0 auto;
 }
 
 h2 {
   color: #333;
+  margin-bottom: 40px;
+  font-size: 32px;
+}
+
+h3 {
+  color: #555;
+  margin-bottom: 15px;
+  font-size: 20px;
+}
+
+.upload-section {
   margin-bottom: 30px;
-  font-size: 30px;
+  padding: 20px;
+  border: 2px dashed #ddd;
+  border-radius: 10px;
+  background-color: #f9f9f9;
 }
 
 .upload-button {
@@ -20,7 +34,7 @@ h2 {
   border-radius: 8px;
   cursor: pointer;
   transition: background-color 0.3s ease;
-  margin-bottom: 20px;
+  margin-top: 10px;
 }
 
 .upload-button:hover {

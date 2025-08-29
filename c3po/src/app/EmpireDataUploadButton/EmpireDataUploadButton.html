@@ -1,8 +1,19 @@
 <div class="file-upload-container">
-  <h2>Upload Empire Data</h2>
+  <h2>Millennium Falcon Path Computer</h2>
 
-  <button class="upload-button" (click)="onUploadClick()">
-    📁 Select JSON File
-  </button>
+  <div class="upload-section">
+    <h3>Upload Empire Data</h3>
+
+    <input 
+      #empireDataInput 
+      type="file" 
+      accept=".json" 
+      (change)="onEmpireDataFileSelected($event)"
+      style="display: none;"
+    />
+    <button class="upload-button" (click)="onEmpireDataUploadClick()">
+      ⚔️ Select Empire Data JSON
+    </button>
+  </div>
 
 </div>
