@@ -1,0 +1,32 @@
+version: '3.8'
+
+services:
+  # Frontend - Angular C3PO
+  c3po:
+    build: ./c3po
+    ports:
+      - "4200:4200"
+    depends_on:
+      - engine
+    environment:
+      - ENGINE_API_URL=http://engine:5000
+
+  # Middle service - Pathfinder Engine
+  engine:
+    build: ./engine
+    ports:
+      - "5000:5000"
+    depends_on:
+      - onboard-computer
+    environment:
+      - ONBOARD_COMPUTER_API_URL=http://onboard-computer:5001
+
+  # Backend - Onboard Computer
+  onboard-computer:
+    build: ./onboard_computer
+    ports:
+      - "5001:5001"
+    volumes:
+      - ./examples:/app/data  # Mount example data
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
