@@ -5,8 +5,8 @@ using BountyHuntersMap = System.Collections.Generic.Dictionary<string, System.Co
 // For testing and debug purpose, keep track of the data returned by the Pathfinder class.
 // m_numberOfDays -> number of days it took to travel from start to arrival planet.
 // m_successProbability -> probability of success if the path crosses bounty hunters.
-    // 0 if the shortest path takes longer than the countdown limit.
-    // 100 if we can reach the arrival planet before the countdown without encountering bounty hunters.
+// 0 if the shortest path takes longer than the countdown limit.
+// 100 if we can reach the arrival planet before the countdown without encountering bounty hunters.
 public struct PathData
 {
     public PathData(int numberOfDays, double successProbability)
@@ -20,12 +20,12 @@ public struct PathData
 }
 public class Pathfinder
 {
+    /********  Private Members  ***********/
     private UniverseGraphRepository m_universeGraphRepository;
-
     private BountyHuntersMap m_bountyHuntersMap = new BountyHuntersMap();
-
     private int m_falconAutonomy { get; set; }
 
+    /********  Public Methods  ***********/
     // Constructor
     public Pathfinder(UniverseGraphRepository universeGraphRepository, BountyHuntersMap bountyHunters, int falconAutonomy)
     {
@@ -44,6 +44,24 @@ public class Pathfinder
         Planet? arrivalPlanet = m_universeGraphRepository.FindPlanet(arrivalPlanetName);
 
         return FindShortestPath(startPlanet, arrivalPlanet, daysCountdown);
+    }
+
+
+    /********  Private Methods  ***********/
+    // Struct to keep track of the state of explored planets
+    private struct ExploredPlanetState
+    {
+        public ExploredPlanetState(Planet planet, int remainingFuel, int bountyHuntersEncounters, int days)
+        {
+            this.planet = planet;
+            this.remainingFuel = remainingFuel;
+            this.bountyHuntersEncounters = bountyHuntersEncounters;
+            this.days = days;
+        }
+        public Planet planet { get; }
+        public int remainingFuel { get; }
+        public int bountyHuntersEncounters { get; }
+        public int days { get; }
     }
 
     private bool planetHasBountyHuntersAtGivenDay(Planet planet, int day)
@@ -69,6 +87,147 @@ public class Pathfinder
         return 100 - gettingCaughtProbability;
     }
 
+    private void ExploreNeighbours(Queue<ExploredPlanetState> planetsToExplore,
+                                   ExploredPlanetState currentState,
+                                   int daysCountdown)
+    {
+        Planet currentPlanet = currentState.planet;
+        int currentFuel = currentState.remainingFuel;
+        int currentBountyHuntersEncounters = currentState.bountyHuntersEncounters;
+        int currentDays = currentState.days;
+
+        foreach (var neighbor in currentPlanet.Neighbors)
+        {
+            Planet? neighborPlanet = m_universeGraphRepository.FindPlanet(neighbor.Key);
+            if (neighborPlanet == null)
+                continue;
+
+            int daysToNeighbor = neighbor.Value;
+
+            // Can't travel if route exceeds fuel capacity.
+            if (daysToNeighbor > m_falconAutonomy)
+                continue;
+
+            int totalTravelTime = currentDays;
+            int newFuelForCurrentRoute = currentFuel;
+            int newBountyHuntersEncounters = currentBountyHuntersEncounters;
+
+            // Check if we need to refuel before traveling.
+            if (currentFuel < daysToNeighbor)
+            {
+                newFuelForCurrentRoute = m_falconAutonomy;
+                totalTravelTime += 1; // Refueling takes 1 day.
+
+                // Check for bounty hunters when refueling.
+                if (planetHasBountyHuntersAtGivenDay(currentPlanet, totalTravelTime))
+                {
+                    newBountyHuntersEncounters++;
+                }
+            }
+
+            // Travel to neighbor planet.
+            totalTravelTime += daysToNeighbor;
+            newFuelForCurrentRoute -= daysToNeighbor;
+
+            // Check for bounty hunters when arriving at destination.
+            if (planetHasBountyHuntersAtGivenDay(neighborPlanet, totalTravelTime))
+            {
+                newBountyHuntersEncounters++;
+            }
+
+            // Add this path to the queue if it doesn't exceed countdown
+            if (totalTravelTime <= daysCountdown)
+            {
+                ExploredPlanetState newState = new ExploredPlanetState(neighborPlanet, newFuelForCurrentRoute, newBountyHuntersEncounters, totalTravelTime);
+                planetsToExplore.Enqueue(newState);
+            }
+        }
+
+        // Option to wait one day at current planet (if not already at max days)
+        // This creates a new path and adds the current planet back to the queue.
+        if (currentDays < daysCountdown)
+        {
+            int waitDays = currentDays + 1;
+            int waitEncounters = currentBountyHuntersEncounters;
+            int waitFuel = m_falconAutonomy; // Refuel while waiting.
+            
+            // Check for bounty hunters when waiting.
+            if (planetHasBountyHuntersAtGivenDay(currentPlanet, waitDays))
+            {
+                waitEncounters++;
+            }
+
+            ExploredPlanetState waitState = new ExploredPlanetState(currentPlanet, currentFuel, waitEncounters, waitDays);
+            planetsToExplore.Enqueue(waitState);
+        }
+    }
+
+    private List<(int daysToArrival, int bountyHunterEncounters)> ComputeAllPathsToArrival(Planet startPlanet, Planet arrivalPlanet, int daysCountdown)
+    {
+        var allPathsToArrival = new List<(int daysToArrival, int bountyHunterEncounters)>();
+
+        // Queue for BFS exploration: (Planet, RemainingFuel, BountyHuntersEncounters, Days)
+        var planetsToExplore = new Queue<ExploredPlanetState>();
+        planetsToExplore.Enqueue(new ExploredPlanetState(startPlanet, m_falconAutonomy, 0, 0));
+
+        // Keep track of visited states to avoid infinite loops
+        var visited = new HashSet<ExploredPlanetState>();
+
+        while (planetsToExplore.Count > 0)
+        {
+            var current = planetsToExplore.Dequeue();
+            Planet currentPlanet = current.planet;
+            int currentBountyHuntersEncounters = current.bountyHuntersEncounters;
+            int currentDays = current.days;
+
+            // Skip if we exceed the countdown
+            if (currentDays > daysCountdown)
+                continue;
+
+            // Skip if we've seen this exact state before (avoid infinite loops)
+            if (visited.Contains(current))
+                continue;
+            visited.Add(current);
+
+            if (currentPlanet == arrivalPlanet)
+            {
+                allPathsToArrival.Add((currentDays, currentBountyHuntersEncounters));
+                continue; // Don't explore further from arrival planet
+            }
+
+            ExploreNeighbours(planetsToExplore, current, daysCountdown);
+        }
+
+        return allPathsToArrival;
+    }
+
+    private PathData FindBestPath(List<(int daysToArrival, int bountyHunterEncounters)> allPathsToArrival, int daysCountdown)
+    {
+        double bestSuccessProbability = 0;
+        int minDaysToArrival = int.MaxValue;
+
+        foreach (var path in allPathsToArrival)
+        {
+            double pathSuccessProbability = CalculateSuccessProbability(path.bountyHunterEncounters);
+
+            if (pathSuccessProbability > bestSuccessProbability)
+            {
+                bestSuccessProbability = pathSuccessProbability;
+                minDaysToArrival = path.daysToArrival;
+            }
+            else if (pathSuccessProbability == bestSuccessProbability && path.daysToArrival < minDaysToArrival)
+            {
+                minDaysToArrival = path.daysToArrival;
+            }
+        }
+
+        PathData result = new PathData(minDaysToArrival == int.MaxValue || minDaysToArrival > daysCountdown
+                        ? -1
+                        : minDaysToArrival
+                        , bestSuccessProbability);
+        return result;
+    }
+
     private PathData FindShortestPath(Planet? startPlanet, Planet? arrivalPlanet, int daysCountdown)
     {
         if (startPlanet == null || arrivalPlanet == null)
@@ -78,99 +237,9 @@ public class Pathfinder
             return defaultPathData;
         }
 
-        double successProbability = 0;
-        int shortestDaysToArrival = int.MaxValue;
+        var allPathsToArrival = ComputeAllPathsToArrival(startPlanet, arrivalPlanet, daysCountdown);
 
-        // Map planets with fuel state -> minimum days to reach it
-        var distances = new Dictionary<(Planet planet, int remainingFuel, int bountyHuntersEncounters), int>();
-
-        var startState = (startPlanet, m_falconAutonomy, 0);
-        distances[startState] = 0;
-
-        // Planets to visit. Starting with startPlanet
-        // Priority queue with the state (Planet, RemainingFuel, BountyHuntersEncounters, Days)
-        var unvisited = new List<(Planet planet, int remainingFuel, int bountyHuntersEncounters, int days)>();
-        unvisited.Add((startPlanet, m_falconAutonomy, 0, 0));
-
-        while (unvisited.Count > 0)
-        {
-            // Sort unvisited planets by their distance and pick the closest one.
-            unvisited.Sort((a, b) => a.days.CompareTo(b.days));
-            var current = unvisited[0];
-            unvisited.RemoveAt(0);
-
-            Planet currentPlanet = current.planet;
-            int currentFuel = current.remainingFuel;
-            int currentBountyHuntersEncounters = current.bountyHuntersEncounters;
-            int currentDays = current.days;
-
-            // Skip if there already is a better path to this planet.
-            var currentState = (currentPlanet, currentFuel, currentBountyHuntersEncounters);
-            if (distances.ContainsKey(currentState) && distances[currentState] < currentDays)
-                continue;
-
-            // Explore neighbors
-            foreach (var neighbor in currentPlanet.Neighbors)
-            {
-                Planet? neighborPlanet = m_universeGraphRepository.FindPlanet(neighbor.Key);
-                if (neighborPlanet == null)
-                    continue;
-
-                int daysToNeighbor = neighbor.Value;
-
-                // Can't travel if route exceeds fuel capacity.
-                if (daysToNeighbor > m_falconAutonomy)
-                    continue;
-
-                int totalTravelTime = currentDays;
-                int newFuelForCurrentRoute = currentFuel;
-
-                // Check if we need to refuel before traveling.
-                if (currentFuel < daysToNeighbor)
-                {
-                    newFuelForCurrentRoute = m_falconAutonomy;
-                    totalTravelTime += 1; // Refueling takes 1 day.
-
-                    // Check for bounty hunters when refueling.
-                    if (planetHasBountyHuntersAtGivenDay(currentPlanet, totalTravelTime))
-                    {
-                        currentBountyHuntersEncounters++;
-                    }
-                }
-
-                // Travel to neighbor planet.
-                totalTravelTime += daysToNeighbor;
-                newFuelForCurrentRoute -= daysToNeighbor;
-
-                var newState = (neighborPlanet, newFuelForCurrentRoute, currentBountyHuntersEncounters);
-                if (!distances.ContainsKey(newState) || distances[newState] > totalTravelTime)
-                {
-                    if (planetHasBountyHuntersAtGivenDay(neighborPlanet, totalTravelTime))
-                    {
-                        currentBountyHuntersEncounters++;
-                    }
-                    // Update the shortest distance to this neighbor and add it to the unvisited queue.
-                    distances[newState] = totalTravelTime;
-                    unvisited.Add((neighborPlanet, newFuelForCurrentRoute, currentBountyHuntersEncounters, totalTravelTime));
-                }
-            }
-        }
-
-        // Find the minimum days to reach arrival planet.
-        foreach (var state in distances.Keys)
-        {
-            if (state.planet == arrivalPlanet && distances[state] < shortestDaysToArrival)
-            {
-                shortestDaysToArrival = distances[state];
-                if (shortestDaysToArrival <= daysCountdown)
-                    successProbability = CalculateSuccessProbability(state.bountyHuntersEncounters);
-            }
-        }
-
-        PathData result = new PathData(shortestDaysToArrival == int.MaxValue || shortestDaysToArrival > daysCountdown
-                        ? -1
-                        : shortestDaysToArrival
-                        , successProbability);
+        PathData result = FindBestPath(allPathsToArrival, daysCountdown);
         return result;
     }
 }

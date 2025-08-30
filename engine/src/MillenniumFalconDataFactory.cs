@@ -1,4 +1,4 @@
-public struct MilleniumFalconData
+public struct MillenniumFalconData
 {
     public int m_autonomy { get; set; }
     public string m_departurePlanet { get; set; }
@@ -6,11 +6,11 @@ public struct MilleniumFalconData
     public UniverseGraphRepository m_universe { get; set; }
 }
 
-public class MilleniumFalconDataFactory
+public class MillenniumFalconDataFactory
 {
-    public static MilleniumFalconData Build(ref MilleniumFalconDataDto falconDataDto)
+    public static MillenniumFalconData Build(ref MillenniumFalconDataDto falconDataDto)
     {
-        return new MilleniumFalconData
+        return new MillenniumFalconData
         {
             m_autonomy = falconDataDto.m_autonomy,
             m_departurePlanet = falconDataDto.m_departure,

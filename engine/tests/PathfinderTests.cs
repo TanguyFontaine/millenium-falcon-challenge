@@ -197,7 +197,24 @@ public class PathfinderTests
     }
 
     [TestMethod]
-    public void FindShortestPath_ValidPlanetsAndCountdownBigEnough_WithOneBHEncounter_ReturnsShortestDistanceWithProbability()
+    public void FindShortestPath_ValidPlanetsAndCountdownBigEnough_WithOneForcedBHEncounter_ReturnsShortestDistanceWithProbability()
+    {
+        var repository = CreateTestRepository();
+        var bountyHuntersDaysPresence = new BountyHuntersMap
+        {
+            { "Hoth", new SortedSet<int> { 6 } }
+        };
+        var pathfinder = new Pathfinder(repository, bountyHuntersDaysPresence, 6);
+
+        PathData result = pathfinder.FindShortestPath("Tatooine", "Endor", 8);
+
+        // Tatooine -> Hoth (6 + 1) -> Endor (1) = 8 days with refueling
+        Assert.AreEqual(8, result.m_numberOfDays);
+        Assert.AreEqual(90, result.m_successProbability);
+    }
+
+    [TestMethod]
+    public void FindShortestPath_ValidPlanetsAndCountdownBigEnoughToDodgeBountyHunters_ReturnsHighestProbability()
     {
         var repository = CreateTestRepository();
         var bountyHuntersDaysPresence = new BountyHuntersMap
@@ -209,8 +226,8 @@ public class PathfinderTests
         PathData result = pathfinder.FindShortestPath("Tatooine", "Endor", 10);
 
         // Tatooine -> Hoth (6 + 1) -> Endor (1) = 8 days with refueling
-        Assert.AreEqual(8, result.m_numberOfDays);
-        Assert.AreEqual(90, result.m_successProbability);
+        Assert.AreEqual(9, result.m_numberOfDays);
+        Assert.AreEqual(100, result.m_successProbability);
     }
 
     [TestMethod]
@@ -231,25 +248,42 @@ public class PathfinderTests
     }
 
     [TestMethod]
-    public void FindShortestPath_ValidPlanetsAndCountdownBigEnough_WithSeveralBH_ReturnsShortestDistanceWithProbability()
+    public void FindShortestPath_RefuelingOnPlanetWithBountyHunters_ReturnsShortestDistanceWithProbability()
     {
-        var repository = CreateTestRepository2();
+        var repository = CreateTestRepository();
         var bountyHuntersDaysPresence = new BountyHuntersMap
         {
-            { "Hoth", new SortedSet<int> { 3, 4 } },
-            { "Dagobah", new SortedSet<int> { 6, 7 } }
+            { "Hoth", new SortedSet<int> { 6, 7, 8 } }
         };
-        var pathfinder = new Pathfinder(repository, bountyHuntersDaysPresence, 12);
+        var pathfinder = new Pathfinder(repository, bountyHuntersDaysPresence, 6);
 
-        PathData result = pathfinder.FindShortestPath("Tatooine", "Endor", 15);
+        PathData result = pathfinder.FindShortestPath("Tatooine", "Endor", 8);
 
-        // Tatooine -> Hoth (4) -> Dagobah (3) -> Endor (2) = 9 days with refueling
-        Assert.AreEqual(9, result.m_numberOfDays);
+        // Tatooine -> Hoth (6 + 1) -> Endor (1) = 8 days with refueling
+        Assert.AreEqual(8, result.m_numberOfDays);
         Assert.AreEqual(81, result.m_successProbability);
     }
-    
-        [TestMethod]
-    public void FindShortestPath_RefuelingOnPlanetWithBountyHunters_ReturnsShortestDistanceWithProbability()
+
+    [TestMethod]
+    public void FindShortestPath_BountyHuntersArrivingOnRefuelDayAndCountdownToShortToWait_ReturnsHighestProbability()
+    {
+        var repository = CreateTestRepository();
+        var bountyHuntersDaysPresence = new BountyHuntersMap
+        {
+            { "Hoth", new SortedSet<int> { 7 } },
+            { "Dagobah", new SortedSet<int> { 7 } }
+        };
+        var pathfinder = new Pathfinder(repository, bountyHuntersDaysPresence, 6);
+
+        PathData result = pathfinder.FindShortestPath("Tatooine", "Endor", 9);
+
+        // Tatooine -> Hoth (6 + 1) -> Endor (1) = 8 days with refueling
+        Assert.AreEqual(8, result.m_numberOfDays);
+        Assert.AreEqual(90, result.m_successProbability);
+    }
+
+    [TestMethod]
+    public void FindShortestPath_WaitingOneDayDodgesBountyHunters_ReturnsHundredPercentProbability()
     {
         var repository = CreateTestRepository();
         var bountyHuntersDaysPresence = new BountyHuntersMap
@@ -260,8 +294,44 @@ public class PathfinderTests
 
         PathData result = pathfinder.FindShortestPath("Tatooine", "Endor", 10);
 
-        // Tatooine -> Hoth (6 + 1) -> Endor (1) = 8 days with refueling
-        Assert.AreEqual(8, result.m_numberOfDays);
-        Assert.AreEqual(81, result.m_successProbability);
+        // Tatooine -> Dagobah (6 + 1 + 1) -> Hoth (1) -> Endor (1) = 10 days with refueling + waiting on Dagobah
+        Assert.AreEqual(10, result.m_numberOfDays);
+        Assert.AreEqual(100, result.m_successProbability);
+    }
+
+    [TestMethod]
+    public void FindShortestPath_WaitingSeveralDaysDodgesBountyHunters_ReturnsHundredPercentProbability()
+    {
+        var repository = CreateTestRepository();
+        var bountyHuntersDaysPresence = new BountyHuntersMap
+        {
+            { "Hoth", new SortedSet<int> { 6, 7 } },
+            { "Dagobah", new SortedSet<int> { 6, 7, 8 } }
+        };
+        var pathfinder = new Pathfinder(repository, bountyHuntersDaysPresence, 6);
+
+        PathData result = pathfinder.FindShortestPath("Tatooine", "Endor", 10);
+
+        // Tatooine (2) -> Hoth (6 + 1) -> Endor (1) = 10 days with refueling and waiting
+        Assert.AreEqual(10, result.m_numberOfDays);
+        Assert.AreEqual(100, result.m_successProbability);
+    }
+
+    [TestMethod]
+    public void FindShortestPath_ValidPlanetsAndCountdownBigEnoughWithWaitingToDodgeSomeEncounters_ReturnsHighestProbability()
+    {
+        var repository = CreateTestRepository2();
+        var bountyHuntersDaysPresence = new BountyHuntersMap
+        {
+            { "Hoth", new SortedSet<int> { 3, 4 } },
+            { "Dagobah", new SortedSet<int> { 6, 7, 8 } }
+        };
+        var pathfinder = new Pathfinder(repository, bountyHuntersDaysPresence, 12);
+
+        PathData result = pathfinder.FindShortestPath("Tatooine", "Endor", 10);
+
+        // Tatooine (1) -> Hoth (4) -> Dagobah (3) -> Endor (2) = 10 days with refueling
+        Assert.AreEqual(10, result.m_numberOfDays);
+        Assert.AreEqual(90, result.m_successProbability);
     }
 }

@@ -93,7 +93,7 @@ public class OnboardComputerController : ControllerBase
             // Handle our custom validation errors as BadRequest
             return BadRequest(new
             {
-                message = "Error reading Millenium Falcon data: invalid JSON format",
+                message = "Error reading Millennium Falcon data: invalid JSON format",
                 error = ex.Message,
                 filePath = dummyFilePath
             });
@@ -103,7 +103,7 @@ public class OnboardComputerController : ControllerBase
             // Unexpected errors
             return StatusCode(500, new
             {
-                message = "Error reading Millenium Falcon configuration.",
+                message = "Error reading Millennium Falcon configuration.",
                 error = ex.Message,
                 filePath = dummyFilePath
             });

@@ -52,7 +52,7 @@ $$ {1 \over 10} + { 9 \over 10^2 } + { 9^2 \over 10^3 } = 0.271 $$
 
 Your mission is to create a web application to compute and display the odds that the Millennium Falcon reaches Endor in time and saves the galaxy.
 
-![Never tell me the odds](https://github.com/dataiku/millenium-falcon-challenge/blob/master/resources/never-tell-me-the-odds.gif)
+![Never tell me the odds](https://github.com/dataiku/millennium-falcon-challenge/blob/master/resources/never-tell-me-the-odds.gif)
 
 Your web application will be composed of a backend (the Millennium Falcon onboard computer), a front-end (C3PO) and a CLI (command-line interface aka R2D2).
 
