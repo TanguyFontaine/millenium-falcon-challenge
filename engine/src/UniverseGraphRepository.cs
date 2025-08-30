@@ -5,7 +5,7 @@ using System.Collections.Generic;
 public class Planet
 {
     public string Name { get; set; }
-    public Dictionary<Planet, int> Neighbors { get; set; } = new Dictionary<Planet, int>();
+    public Dictionary<string, int> Neighbors { get; set; } = new Dictionary<string, int>();
 
     public Planet(string name)
     {
@@ -14,13 +14,24 @@ public class Planet
 
     public void AddNeighbor(Planet node, int distance)
     {
-        Neighbors[node] = distance;
+        Neighbors[node.Name] = distance;
+    }
+
+    // Compare planets by name.
+    public override bool Equals(object? obj)
+    {
+        return obj is Planet planet && Name.Equals(planet.Name, StringComparison.OrdinalIgnoreCase);
+    }
+
+    public override int GetHashCode()
+    {
+        return Name?.GetHashCode(StringComparison.OrdinalIgnoreCase) ?? 0;
     }
 }
 
 public class UniverseGraphRepository
 {
-    private List<Planet> m_planets = new List<Planet>();
+    private HashSet<Planet> m_planets = new HashSet<Planet>();
 
     public void AddPlanet(Planet planet)
     {
@@ -29,11 +40,16 @@ public class UniverseGraphRepository
 
     public Planet? FindPlanet(string name)
     {
-        return m_planets.Find(p => p.Name == name);
+        return m_planets.FirstOrDefault(p => p.Name.Equals(name, StringComparison.OrdinalIgnoreCase));
     }
 
     public IEnumerable<Planet> GetAllPlanets()
     {
         return m_planets;
+    }
+
+    public bool IsEmpty()
+    {
+        return !m_planets.Any();
     }
 }

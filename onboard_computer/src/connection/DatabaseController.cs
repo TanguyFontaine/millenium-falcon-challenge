@@ -28,17 +28,12 @@ public class DatabaseController : ControllerBase
                 {
                     while (await reader.ReadAsync())
                     {
-                        // Get column names dynamically to avoid index out of bounds errors
-                        var route = new Dictionary<string, object>();
-                        
-                        for (int i = 0; i < reader.FieldCount; i++)
+                        routes.Add(new
                         {
-                            string columnName = reader.GetName(i);
-                            object value = reader.IsDBNull(i) ? "" : reader.GetValue(i).ToString();
-                            route[columnName] = value;
-                        }
-                        
-                        routes.Add(route);
+                            origin = reader["ORIGIN"]?.ToString() ?? string.Empty,
+                            destination = reader["DESTINATION"]?.ToString() ?? string.Empty,
+                            distance = reader["TRAVEL_TIME"] != DBNull.Value ? Convert.ToInt32(reader["TRAVEL_TIME"]) : 0
+                        });
                     }
                 }
             }

@@ -14,6 +14,9 @@ namespace PathfinderEngine
             // Add services to the container
             builder.Services.AddControllers();
             
+            // Add HttpClient for calling OnboardComputerService
+            builder.Services.AddHttpClient();
+            
             // Enable CORS for Angular frontend
             builder.Services.AddCors(options =>
             {

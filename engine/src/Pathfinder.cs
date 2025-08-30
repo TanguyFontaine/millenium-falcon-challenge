@@ -27,7 +27,7 @@ public class Pathfinder
     private int m_falconAutonomy { get; set; }
 
     // Constructor
-    public Pathfinder(ref UniverseGraphRepository universeGraphRepository, ref BountyHuntersMap bountyHunters, int falconAutonomy)
+    public Pathfinder(UniverseGraphRepository universeGraphRepository, BountyHuntersMap bountyHunters, int falconAutonomy)
     {
         m_universeGraphRepository = universeGraphRepository;
         m_bountyHuntersMap = bountyHunters;
@@ -112,7 +112,10 @@ public class Pathfinder
             // Explore neighbors
             foreach (var neighbor in currentPlanet.Neighbors)
             {
-                Planet neighborPlanet = neighbor.Key;
+                Planet? neighborPlanet = m_universeGraphRepository.FindPlanet(neighbor.Key);
+                if (neighborPlanet == null)
+                    continue;
+
                 int daysToNeighbor = neighbor.Value;
 
                 // Can't travel if route exceeds fuel capacity.

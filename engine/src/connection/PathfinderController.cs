@@ -7,28 +7,58 @@ namespace PathfinderEngine.Controllers
     [Route("api/[controller]")]
     public class PathfinderController : ControllerBase
     {
-        public PathfinderController()
-        {}
+        private readonly HttpClient _httpClient;
+
+        public PathfinderController(HttpClient httpClient)
+        {
+            _httpClient = httpClient;
+        }
+
+        // Call OnboardComputerService to get Millennium Falcon configuration and universe data
+        private async Task<string> GetMilleniumFalconConfigurationAsync()
+        {
+            string onboardComputerUrl = "http://localhost:5001/api/onboardcomputer/read";
+            HttpResponseMessage response = await _httpClient.GetAsync(onboardComputerUrl);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                throw new Exception($"Failed to retrieve Millennium Falcon configuration: {response.StatusCode}");
+            }
+
+            return await response.Content.ReadAsStringAsync();
+        }
+
+        private MilleniumFalconData RetrieveMilleniumFalconData(string milleniumFalconConfiguration)
+        {
+            MilleniumFalconDataDto milleniumFalconDataDto = MilleniumFalconParser.Parse(milleniumFalconConfiguration);
+
+            return MilleniumFalconDataFactory.Build(ref milleniumFalconDataDto);
+        }
+
+        private EmpireData RetrieveEmpireData(string empireDataJson)
+        {
+            EmpireDataDto empireDataDto = EmpireDataParser.Parse(empireDataJson);
+            return EmpireDataFactory.Build(ref empireDataDto);
+        }
+
+        private PathData ComputePath(MilleniumFalconData milleniumFalconData, EmpireData empireData)
+        {
+            Pathfinder pathfinder = new Pathfinder(milleniumFalconData.m_universe, empireData.m_bountyHuntersPresence, milleniumFalconData.m_autonomy);
+
+            return pathfinder.FindShortestPath(milleniumFalconData.m_departurePlanet, milleniumFalconData.m_arrivalPlanet, empireData.m_countdown);
+        }
 
         [HttpPost("compute")]
-        public IActionResult ComputePath([FromBody] CalculatePathRequest request)
+        public async Task<IActionResult> ComputePath([FromBody] CalculatePathRequest request)
         {
             try
             {
-                // dummy millenium falcon data
-                int millenniumFalconAutonomy = 6;
-                string departurePlanet = "Tatooine";
-                string arrivalPlanet = "Endor";
-                var universeRepository = CreateMockUniverseRepository();
+                string milleniumFalconConfiguration = await GetMilleniumFalconConfigurationAsync();
+                MilleniumFalconData milleniumFalconData = RetrieveMilleniumFalconData(milleniumFalconConfiguration);
 
-                // Retrieve empire data
-                EmpireDataDto empireDataDTO = EmpireDataParser.Parse(request.EmpireDataJson);
-                EmpireData empireData = EmpireDataFactory.Build(ref empireDataDTO);
-                var bountyHuntersMap = empireData.m_bountyHuntersPresence;
+                EmpireData empireData = RetrieveEmpireData(request.EmpireDataJson);
 
-                Pathfinder pathfinder = new Pathfinder(ref universeRepository, ref bountyHuntersMap, millenniumFalconAutonomy);
-
-                PathData pathResult = pathfinder.FindShortestPath(departurePlanet, arrivalPlanet, empireData.m_countdown);
+                PathData pathResult = ComputePath(milleniumFalconData, empireData);
 
                 // Return result
                 var response = new
@@ -37,9 +67,9 @@ namespace PathfinderEngine.Controllers
                     successProbability = pathResult.m_successProbability,
                     configuration = new
                     {
-                        departure = departurePlanet,
-                        arrival = arrivalPlanet,
-                        autonomy = millenniumFalconAutonomy,
+                        departure = milleniumFalconData.m_departurePlanet,
+                        arrival = milleniumFalconData.m_arrivalPlanet,
+                        autonomy = milleniumFalconData.m_autonomy,
                         countdown = empireData.m_countdown
                     }
                 };
@@ -54,32 +84,6 @@ namespace PathfinderEngine.Controllers
             {
                 return StatusCode(500, new { error = "Internal server error", message = ex.Message });
             }
-        }
-
-        private UniverseGraphRepository CreateMockUniverseRepository()
-        {
-            var repository = new UniverseGraphRepository();
-            
-            var tatooine = new Planet("Tatooine");
-            var dagobah = new Planet("Dagobah");
-            var endor = new Planet("Endor");
-            var hoth = new Planet("Hoth");
-            
-            tatooine.AddNeighbor(dagobah, 6);
-            tatooine.AddNeighbor(hoth, 6);
-            dagobah.AddNeighbor(endor, 4);
-            dagobah.AddNeighbor(hoth, 1);
-            hoth.AddNeighbor(endor, 1);
-            hoth.AddNeighbor(dagobah, 1);
-            endor.AddNeighbor(dagobah, 4);
-            endor.AddNeighbor(hoth, 1);
-
-            repository.AddPlanet(tatooine);
-            repository.AddPlanet(dagobah);
-            repository.AddPlanet(endor);
-            repository.AddPlanet(hoth);
-            
-            return repository;
         }
 
         [HttpGet("test")]
