@@ -11,7 +11,6 @@ public class JSONValidationException : Exception
 public class OnboardComputerController : ControllerBase
 {
     private DatabaseController m_databaseController;
-    const string dummyFilePath = "..\\examples\\example1\\millennium-falcon.json";
 
     public OnboardComputerController()
     {
@@ -51,61 +50,79 @@ public class OnboardComputerController : ControllerBase
         }
     }
 
+    // To use the default config file
     [HttpGet("read")]
-    public async Task<IActionResult> ReadFalconConfigurationAndUniverse()
+    public async Task<IActionResult> ReadDefaultFalconConfiguration()
+    {
+        return await ProcessFalconConfigurationFromFile(OnboardComputerConfig.MillenniumFalconFilePath);
+    }
+
+    // To use uploaded config content from C3PO
+    [HttpPost("read")]
+    public async Task<IActionResult> ReadFalconConfigurationFromContent([FromBody] JsonElement falconConfigJson)
+    {
+        return await ProcessFalconConfiguration(falconConfigJson.GetRawText(), isUploadedContent: true);
+    }
+
+    private async Task<IActionResult> ProcessFalconConfigurationFromFile(string configPath)
+    {
+        if (!System.IO.File.Exists(configPath))
+        {
+            return NotFound(new { message = $"Falcon configuration file not found: {configPath}" });
+        }
+
+        string jsonContent = await System.IO.File.ReadAllTextAsync(configPath);
+        return await ProcessFalconConfiguration(jsonContent, isUploadedContent: false, configPath);
+    }
+
+    private async Task<IActionResult> ProcessFalconConfiguration(string falconJsonContent, bool isUploadedContent, string? configFilePath = null)
     {
         try
         {
-            // Read the millennium falcon configuration file
-            if (!System.IO.File.Exists(dummyFilePath))
-            {
-                return NotFound(new { message = $"Falcon configuration file not found: {dummyFilePath}" });
-            }
-
-            string jsonContent = await System.IO.File.ReadAllTextAsync(dummyFilePath);
-            JsonDocument jsonDocument = JsonDocument.Parse(jsonContent);
+            JsonDocument jsonDocument = JsonDocument.Parse(falconJsonContent);
+            JsonElement root = jsonDocument.RootElement;
 
             // Extract configuration values
-            int autonomy = GetIntValue(jsonDocument.RootElement, "autonomy");
-            string departure = GetStringValue(jsonDocument.RootElement, "departure");
-            string arrival = GetStringValue(jsonDocument.RootElement, "arrival");
-            string databasePath = GetStringValue(jsonDocument.RootElement, "routes_db");
+            int autonomy = GetIntValue(root, "autonomy");
+            string departure = GetStringValue(root, "departure");
+            string arrival = GetStringValue(root, "arrival");
+            string databasePath = GetStringValue(root, "routes_db");
 
-            // Create complete database path (works for both relative and absolute paths)
-            string configurationDirectoryPath = Path.GetDirectoryName(Path.GetFullPath(dummyFilePath)) ?? "";
+            // uploaded file database path must be absolute.
+            // TODO: enforce that and check with error logging
+            string configurationDirectoryPath = isUploadedContent ?
+                                                "" :
+                                                Path.GetDirectoryName(Path.GetFullPath(OnboardComputerConfig.MillenniumFalconFilePath)) ?? "";
             string completeDatabasePath = Path.Combine(configurationDirectoryPath, databasePath);
 
-            // Call DatabaseController to read all universe routes (use the complete path)
-            // Will throw FileNotFoundException if the database file is not found.
+            // Call DatabaseController to read all universe routes
             var universeRoutes = await m_databaseController.GetUniverseRoutesAsync(completeDatabasePath);
 
-            // Return combined response as one JSON string
             return Ok(new
             {
                 autonomy = autonomy,
                 departure = departure,
                 arrival = arrival,
-                routes_data = universeRoutes
+                routes_data = universeRoutes,
+                source = configFilePath ?? "uploaded JSON content"
             });
         }
         catch (JSONValidationException ex)
         {
-            // Handle our custom validation errors as BadRequest
             return BadRequest(new
             {
                 message = "Error reading Millennium Falcon data: invalid JSON format",
                 error = ex.Message,
-                filePath = dummyFilePath
+                source = configFilePath ?? "uploaded JSON content"
             });
         }
         catch (Exception ex)
         {
-            // Unexpected errors
             return StatusCode(500, new
             {
                 message = "Error reading Millennium Falcon configuration.",
                 error = ex.Message,
-                filePath = dummyFilePath
+                source = configFilePath ?? "uploaded JSON content"
             });
         }
     }

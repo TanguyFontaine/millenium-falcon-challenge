@@ -1,5 +1,6 @@
 import { Component, ViewChild, ElementRef, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
+import { FalconConfigService } from '../FalconConfigUpload/FalconConfig.service';
 
 @Component({
   selector: 'app-empire-data-upload-button',
@@ -12,6 +13,7 @@ export class EmpireDataUploadButton {
   @ViewChild('empireDataInput') empireDataInput!: ElementRef<HTMLInputElement>;
   
   private http = inject(HttpClient);
+  private falconConfigService = inject(FalconConfigService);
   private apiUrl = 'http://localhost:5000/api/pathfinder';
 
   empireDataJson: string = '';
@@ -37,7 +39,6 @@ export class EmpireDataUploadButton {
 
     this.readFile(file, (content) => {
       this.empireDataJson = content;
-      console.log('Empire data loaded');
       this.checkAndCalculate();
       
       // Clear the input so we can select the same file again
@@ -71,9 +72,11 @@ export class EmpireDataUploadButton {
 
   private calculatePath()
   {
-    const request =
-    {
-      EmpireDataJson: this.empireDataJson
+    const falconConfig = this.falconConfigService.getFalconConfig();
+    
+    const request = {
+      EmpireDataJson: this.empireDataJson,
+      FalconDataJson: falconConfig ? JSON.stringify(falconConfig) : undefined
     };
 
     this.http.post(`${this.apiUrl}/compute`, request).subscribe({
@@ -82,8 +85,8 @@ export class EmpireDataUploadButton {
 
         const message = `Path computation completed!
 
+Success probability: ${response.successProbability}%
 Days required: ${response.numberOfDays}
-Success probability: ${response.successProbability.toFixed(2)}%
 
 Configuration:
 - From: ${response.configuration.departure}

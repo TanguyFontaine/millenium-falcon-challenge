@@ -15,8 +15,26 @@ namespace PathfinderEngine.Controllers
         }
 
         // Call OnboardComputerService to get Millennium Falcon configuration and universe data
-        private async Task<string> GetMillenniumFalconConfigurationAsync()
+        private async Task<string> GetMillenniumFalconConfigurationAsync(string? sentJsonConfiguraion = null)
         {
+            if (sentJsonConfiguraion != null)
+            {
+                // Send the JSON to onboard computer to process and add routes_data
+                string processUrl = "http://localhost:5001/api/onboardcomputer/read";
+                
+                var content = new StringContent(sentJsonConfiguraion, System.Text.Encoding.UTF8, "application/json");
+                HttpResponseMessage processResponse = await _httpClient.PostAsync(processUrl, content);
+
+                if (!processResponse.IsSuccessStatusCode)
+                {
+                    throw new Exception($"Failed to process Millennium Falcon configuration through OnboardComputer: {processResponse.StatusCode}");
+                }
+
+                string processedConfig = await processResponse.Content.ReadAsStringAsync();
+                return processedConfig;
+            }
+
+            // If no config provided, fetch default from OnboardComputer service
             string onboardComputerUrl = "http://localhost:5001/api/onboardcomputer/read";
             HttpResponseMessage response = await _httpClient.GetAsync(onboardComputerUrl);
 
@@ -44,8 +62,9 @@ namespace PathfinderEngine.Controllers
         private PathData ComputePath(MillenniumFalconData millenniumFalconData, EmpireData empireData)
         {
             Pathfinder pathfinder = new Pathfinder(millenniumFalconData.m_universe, empireData.m_bountyHuntersPresence, millenniumFalconData.m_autonomy);
-
-            return pathfinder.FindShortestPath(millenniumFalconData.m_departurePlanet, millenniumFalconData.m_arrivalPlanet, empireData.m_countdown);
+            PathData pathData = pathfinder.FindShortestPath(millenniumFalconData.m_departurePlanet, millenniumFalconData.m_arrivalPlanet, empireData.m_countdown);
+            
+            return pathData;
         }
 
         [HttpPost("compute")]
@@ -53,9 +72,10 @@ namespace PathfinderEngine.Controllers
         {
             try
             {
-                string millenniumFalconConfiguration = await GetMillenniumFalconConfigurationAsync();
+                string millenniumFalconConfiguration = await GetMillenniumFalconConfigurationAsync(request.FalconDataJson);
+                
                 MillenniumFalconData millenniumFalconData = RetrieveMillenniumFalconData(millenniumFalconConfiguration);
-
+                
                 EmpireData empireData = RetrieveEmpireData(request.EmpireDataJson);
 
                 PathData pathResult = ComputePath(millenniumFalconData, empireData);
@@ -97,5 +117,8 @@ namespace PathfinderEngine.Controllers
     public class CalculatePathRequest
     {
         public string EmpireDataJson { get; set; } = string.Empty;
+
+        // Can be null, in this case, use default millennium config
+        public string? FalconDataJson { get; set; }
     }
 }

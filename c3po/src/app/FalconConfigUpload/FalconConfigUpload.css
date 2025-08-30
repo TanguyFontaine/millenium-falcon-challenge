@@ -1,0 +1,125 @@
+.file-upload-container {
+  text-align: center;
+  padding: 40px;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+h2 {
+  color: #333;
+  margin-bottom: 40px;
+  font-size: 32px;
+}
+
+h3 {
+  color: #555;
+  margin-bottom: 15px;
+  font-size: 20px;
+}
+
+.upload-section {
+  margin-bottom: 30px;
+  padding: 20px;
+  border: 2px dashed #ddd;
+  border-radius: 10px;
+  background-color: #f9f9f9;
+}
+
+.upload-button {
+  background-color: #007bff;
+  color: white;
+  border: none;
+  padding: 15px 30px;
+  font-size: 18px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+  margin-top: 10px;
+}
+
+.upload-button:hover {
+  background-color: #0056b3;
+}
+
+.upload-button:active {
+  transform: translateY(1px);
+}
+
+.button-group {
+  display: flex;
+  gap: 15px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.btn-secondary {
+  background-color: #6c757d;
+}
+
+.btn-secondary:hover {
+  background-color: #545b62;
+}
+
+.loading-message {
+  background-color: #d1ecf1;
+  color: #0c5460;
+  border: 1px solid #bee5eb;
+  padding: 15px;
+  border-radius: 5px;
+  margin: 15px 0;
+}
+
+.error-message {
+  background-color: #f8d7da;
+  color: #721c24;
+  border: 1px solid #f5c6cb;
+  padding: 15px;
+  border-radius: 5px;
+  margin: 15px 0;
+}
+
+.config-display {
+  margin-top: 30px;
+  padding: 20px;
+  background-color: #f8f9fa;
+  border: 1px solid #dee2e6;
+  border-radius: 10px;
+  text-align: left;
+}
+
+.config-info p {
+  margin: 8px 0;
+  padding: 8px;
+  background-color: #e9ecef;
+  border-radius: 5px;
+}
+
+.routes-details {
+  margin-top: 15px;
+}
+
+.routes-details summary {
+  cursor: pointer;
+  padding: 10px;
+  background-color: #e9ecef;
+  border: 1px solid #ced4da;
+  border-radius: 5px;
+  font-weight: bold;
+}
+
+.routes-details summary:hover {
+  background-color: #dee2e6;
+}
+
+.json-display {
+  background-color: #f8f9fa;
+  border: 1px solid #dee2e6;
+  border-radius: 5px;
+  padding: 15px;
+  max-height: 300px;
+  overflow: auto;
+  font-size: 12px;
+  color: #495057;
+  white-space: pre-wrap;
+  margin-top: 10px;
+}

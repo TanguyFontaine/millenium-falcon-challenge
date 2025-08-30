@@ -334,4 +334,22 @@ public class PathfinderTests
         Assert.AreEqual(10, result.m_numberOfDays);
         Assert.AreEqual(90, result.m_successProbability);
     }
+
+    [TestMethod]
+    public void FindShortestPath_HothToEndor_ReturnsHundredPercentProbability()
+    {
+        var repository = CreateTestRepository();
+        var bountyHuntersDaysPresence = new BountyHuntersMap
+        {
+            { "Hoth", new SortedSet<int> { 6, 7, 8 } }
+        };
+        var pathfinder = new Pathfinder(repository, bountyHuntersDaysPresence, 6);
+
+        PathData result = pathfinder.FindShortestPath("Hoth", "Endor", 10);
+
+        // Hoth -> Endor (1) = 1 day with refueling
+        Assert.AreEqual(1, result.m_numberOfDays);
+        Assert.AreEqual(100, result.m_successProbability);
+    }
+
 }

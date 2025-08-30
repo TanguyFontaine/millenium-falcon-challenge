@@ -1,0 +1,40 @@
+<div class="file-upload-container">
+  
+  <div class="upload-section">
+    <h3>Upload Falcon Data</h3>
+    
+    <input 
+      #falconConfigInput 
+      type="file" 
+      accept=".json" 
+      style="display: none;" 
+      (change)="onFalconConfigFileSelected($event)" 
+    />
+    
+    <div class="button-group">
+      <button class="upload-button" (click)="onFalconConfigUploadClick()">
+        🚀 Upload JSON File
+      </button>
+      
+      <button class="upload-button btn-secondary" (click)="useDefaultConfig()">
+        🏠 Use Default Config
+      </button>
+    </div>
+  </div>
+
+  <div *ngIf="errorMessage" class="error-message">
+    ⚠️ {{ errorMessage }}
+  </div>
+
+  <div *ngIf="configData" class="config-display">
+    <h3>📊 Configuration Data</h3>
+    <div class="config-info">
+      <p><strong>Autonomy:</strong> {{ configData.autonomy }} days</p>
+      <p><strong>Departure:</strong> {{ configData.departure }}</p>
+      <p><strong>Arrival:</strong> {{ configData.arrival }}</p>
+      <p><strong>Source:</strong> {{ configData.source }}</p>
+    </div>
+    
+
+  </div>
+</div>

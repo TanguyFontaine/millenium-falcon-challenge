@@ -58,3 +58,12 @@ npm install
 npm start
 # Runs on http://localhost:4200
 ```
+
+Front the front page, you can upload a Falcon data json file.
+In this case, the path to the database MUST be an absolute path.
+
+Then when selecting empire data, it will automatically launch the computation.
+
+If no Falcon data were uploaded, the default file provided to the onboard computer engine is used.
+
+If no file is specified, the millennium-falcon file in example1 is used.
