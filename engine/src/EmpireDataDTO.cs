@@ -1,5 +1,4 @@
 
-using System.Text.Json;
 using System.Text.Json.Serialization;
 
 // DTO for JSON deserialization
@@ -60,30 +59,5 @@ public class BountyHunterDto : IEquatable<BountyHunterDto>
     public override int GetHashCode()
     {
         return HashCode.Combine(m_planet, m_day);
-    }
-}
-
-public class EmpireDataParser
-{
-    public static EmpireDataDto Parse(string jsonContent)
-    {
-        try
-        {
-            EmpireDataDto? empireDto = JsonSerializer.Deserialize<EmpireDataDto>(jsonContent, new JsonSerializerOptions
-            {
-                PropertyNameCaseInsensitive = true
-            });
-
-            if (empireDto == null)
-            {
-                throw new InvalidDataException("Failed to read empire data - invalid JSON structure");
-            }
-
-            return empireDto;
-        }
-        catch (JsonException ex)
-        {
-            throw new ArgumentException($"Invalid JSON format: {ex.Message}", ex);
-        }
     }
 }

@@ -1,7 +1,7 @@
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 [TestClass]
-public class EmpireDataDTOTests
+public class EmpireDataParserTests
 {
     [TestMethod]
     public void Parse_ValidSimpleJson_ConvertsCorrectly()

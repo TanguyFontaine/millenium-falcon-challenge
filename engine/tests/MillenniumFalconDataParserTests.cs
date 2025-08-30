@@ -1,7 +1,7 @@
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 [TestClass]
-public class MilleniumFalconDataDTOTests
+public class MillenniumFalconDataParserTests
 {
     [TestMethod]
     public void Parse_ValidSimpleJson_ParsesCorrectly()
@@ -17,9 +17,9 @@ public class MilleniumFalconDataDTOTests
                 ]
             }";
 
-        MilleniumFalconDataDto actual = MilleniumFalconParser.Parse(jsonString);
+        MillenniumFalconDataDto actual = MillenniumFalconParser.Parse(jsonString);
 
-        MilleniumFalconDataDto expected = new MilleniumFalconDataDto
+        MillenniumFalconDataDto expected = new MillenniumFalconDataDto
         {
             m_autonomy = 6,
             m_departure = "Tatooine",
@@ -51,9 +51,9 @@ public class MilleniumFalconDataDTOTests
                 ]
             }";
 
-        MilleniumFalconDataDto actual = MilleniumFalconParser.Parse(jsonString);
+        MillenniumFalconDataDto actual = MillenniumFalconParser.Parse(jsonString);
 
-        MilleniumFalconDataDto expected = new MilleniumFalconDataDto
+        MillenniumFalconDataDto expected = new MillenniumFalconDataDto
         {
             m_autonomy = 12,
             m_departure = "Alderaan",
@@ -81,9 +81,9 @@ public class MilleniumFalconDataDTOTests
                 ""routes_data"": []
             }";
 
-        MilleniumFalconDataDto actual = MilleniumFalconParser.Parse(jsonString);
+        MillenniumFalconDataDto actual = MillenniumFalconParser.Parse(jsonString);
 
-        MilleniumFalconDataDto expected = new MilleniumFalconDataDto
+        MillenniumFalconDataDto expected = new MillenniumFalconDataDto
         {
             m_autonomy = 8,
             m_departure = "Tatooine",
@@ -107,7 +107,7 @@ public class MilleniumFalconDataDTOTests
                 ]
             }";
 
-        Assert.ThrowsException<ArgumentException>(() => MilleniumFalconParser.Parse(invalidJson));
+        Assert.ThrowsException<ArgumentException>(() => MillenniumFalconParser.Parse(invalidJson));
     }
 
     [TestMethod]
@@ -115,7 +115,7 @@ public class MilleniumFalconDataDTOTests
     {
         string nullJson = null!;
 
-        Assert.ThrowsException<ArgumentNullException>(() => MilleniumFalconParser.Parse(nullJson));
+        Assert.ThrowsException<ArgumentNullException>(() => MillenniumFalconParser.Parse(nullJson));
     }
 
     [TestMethod]
@@ -125,9 +125,9 @@ public class MilleniumFalconDataDTOTests
                 ""autonomy"": 6
             }";
 
-        MilleniumFalconDataDto actual = MilleniumFalconParser.Parse(jsonString);
+        MillenniumFalconDataDto actual = MillenniumFalconParser.Parse(jsonString);
 
-        MilleniumFalconDataDto expected = new MilleniumFalconDataDto
+        MillenniumFalconDataDto expected = new MillenniumFalconDataDto
         {
             m_autonomy = 6,
             m_departure = string.Empty,
